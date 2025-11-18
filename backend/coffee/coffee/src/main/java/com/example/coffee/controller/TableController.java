@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/tables")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174", "https://web2-1-8zko.onrender.com", "https://web2-c48d.onrender.com"})
 public class TableController {
 
     private final TableService service;
