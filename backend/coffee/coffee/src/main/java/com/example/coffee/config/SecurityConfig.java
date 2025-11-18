@@ -78,7 +78,9 @@ public class SecurityConfig {
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "http://localhost:5173/80"
+                "http://localhost:5173/80",
+                "https://web2-1-8zko.onrender.com",   // frontend Render
+                "https://web2-c48d.onrender.com"      // backend Render
         ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
