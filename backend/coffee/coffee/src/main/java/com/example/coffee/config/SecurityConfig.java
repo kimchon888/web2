@@ -26,61 +26,53 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    //  Mã hóa mật khẩu
+    // Password encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    //  Quản lý xác thực
+    // Authentication manager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    //  Cấu hình bảo mật
+    // Main security configuration
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Tắt CSRF (vì dùng JWT)
                 .csrf(csrf -> csrf.disable())
-                // Bật CORS theo cấu hình bên dưới
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                // Stateless session (JWT không cần session)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Cho phép các route public
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/auth/**",     // Đăng nhập / đăng ký
-                                "/api/menu/**",     // Menu (public)
-                                "/api/tables/**",   // Bàn (public)
-                                "/api/orders/**"    // Đặt món / đặt bàn (public)
+                                "/api/auth/**",
+                                "/api/menu/**",
+                                "/api/tables/**",
+                                "/api/orders/**"
                         ).permitAll()
-                        // Các route còn lại cần xác thực JWT
                         .anyRequest().authenticated()
                 )
-                // Tắt form login & HTTP basic
                 .httpBasic(httpBasic -> httpBasic.disable())
                 .formLogin(formLogin -> formLogin.disable());
 
-        // Thêm JWT filter vào chuỗi xử lý trước UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // Cấu hình CORS chính xác
+    // CORS configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        //  Dùng allowedOriginPatterns để tránh lỗi “*” + allowCredentials
+        // Must use patterns because allowCredentials = true
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "http://localhost:5173/80",
-                "https://web2-1-8zko.onrender.com",   // frontend Render
-                "https://web2-c48d.onrender.com"      // backend Render
+                "https://web2-1-8zko.onrender.com", // frontend Render
+                "https://web2-c48d.onrender.com"    // backend Render
         ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -91,7 +83,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        System.out.println("✅ Loaded CORS config for frontend: 5173, 5174");
+        System.out.println("✅ CORS loaded successfully");
         return source;
     }
 }
