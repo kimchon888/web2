@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import client from "../api/axiosClient";   // ← dùng axiosClient thay axios
 import { useNavigate } from "react-router-dom";
 
 function Login() {
@@ -9,8 +9,9 @@ function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
     try {
-      const res = await axios.post("http://localhost:8082/api/auth/login", {
+      const res = await client.post("/auth/login", {
         username,
         password,
       });
@@ -20,15 +21,10 @@ function Login() {
         return;
       }
 
-      // 🔹 Trường hợp backend trả về `roles` là mảng
-      let role = null;
-      if (Array.isArray(res.data.roles)) {
-        role = res.data.roles[0]; // lấy role đầu tiên
-      } else {
-        role = res.data.role; // fallback nếu backend trả về 1 role duy nhất
-      }
+      let role = Array.isArray(res.data.roles)
+        ? res.data.roles[0]
+        : res.data.role;
 
-      // 🔹 Lưu vào localStorage
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", role);
       localStorage.setItem("username", res.data.username);
@@ -45,9 +41,7 @@ function Login() {
   return (
     <div
       className="d-flex align-items-center justify-content-center vh-100"
-      style={{
-        background: "linear-gradient(135deg, #e0f7fa, #f1f8e9)",
-      }}
+      style={{ background: "linear-gradient(135deg, #e0f7fa, #f1f8e9)" }}
     >
       <div className="card shadow-lg p-4" style={{ width: "400px" }}>
         <h3 className="text-center mb-4 text-primary">☕ Coffee Login</h3>

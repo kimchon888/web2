@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import client from "../api/axiosClient";  // ← dùng axiosClient
 import { useNavigate } from "react-router-dom";
 
 function Register() {
@@ -10,16 +10,19 @@ function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
     try {
-      await axios.post("http://localhost:8082/api/auth/register", {
+      await client.post("/auth/register", {
         username,
         email,
         password,
       });
+
       alert("🎉 Đăng ký thành công!");
       navigate("/login");
     } catch (err) {
       alert("⚠️ Tên đăng nhập đã tồn tại!");
+      console.error(err);
     }
   };
 
