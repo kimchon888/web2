@@ -15,10 +15,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @CrossOrigin(
-        origins = {"http://localhost:5173", "http://localhost:5174"},
+        origins = {
+                "http://localhost:5173",
+                "http://localhost:5174",
+                "https://web2-1-8zko.onrender.com", // frontend Render
+                "https://web2-c48d.onrender.com"    // backend Render
+        },
         allowedHeaders = "*",
-        allowCredentials = "true",
-        methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
+        allowCredentials = "true"
 )
 @RestController
 @RequestMapping("/api/auth")
@@ -36,13 +40,13 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-    // 🔹 Đăng ký người dùng mới
+    // ✅ REGISTER
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
+
         Optional<User> existingUser = userRepository.findByUsername(user.getUsername());
         if (existingUser.isPresent()) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(Map.of("error", "Username already exists"));
         }
 
@@ -56,39 +60,33 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }
 
-    // 🔹 Đăng nhập
+    // ✅ LOGIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User loginUser) {
-        System.out.println("📩 Login request: " + loginUser.getUsername());
 
-        try {
-            User user = userRepository.findByUsername(loginUser.getUsername())
-                    .or(() -> userRepository.findByEmail(loginUser.getUsername()))
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(loginUser.getUsername())
+                .or(() -> userRepository.findByEmail(loginUser.getUsername()))
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            if (!passwordEncoder.matches(loginUser.getPassword(), user.getPassword())) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(Map.of("error", "Invalid password"));
-            }
-
-            //  Lấy danh sách quyền
-            Set<String> roles = user.getRoles().stream()
-                    .map(Role::getName)
-                    .collect(Collectors.toSet());
-
-            //  Sinh JWT token kèm roles
-            String token = jwtService.generateToken(user.getUsername(), roles);
-
-            return ResponseEntity.ok(Map.of(
-                    "message", "Login successful",
-                    "token", token,
-                    "username", user.getUsername(),
-                    "roles", roles
-            ));
-
-        } catch (RuntimeException e) {
+        if (!passwordEncoder.matches(loginUser.getPassword(), user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", "Invalid password"));
         }
+
+        // ✅ Get roles
+        Set<String> roles = user.getRoles().stream()
+                .map(Role::getName)
+                .collect(Collectors.toSet());
+
+        // ✅ Generate JWT
+        String token = jwtService.generateToken(user.getUsername(), roles);
+
+        // ✅ Return token in correct format for frontend
+        return ResponseEntity.ok(Map.of(
+                "message", "Login successful",
+                "token", "Bearer " + token,
+                "username", user.getUsername(),
+                "roles", roles
+        ));
     }
 }

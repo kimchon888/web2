@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import client from "../api/axiosClient";   // ← dùng axiosClient thay axios
+import client from "../api/axiosClient";
 import { useNavigate } from "react-router-dom";
 
 function Login() {
@@ -11,7 +11,7 @@ function Login() {
     e.preventDefault();
 
     try {
-      const res = await client.post("/auth/login", {
+      const res = await client.post("/api/auth/login", {
         username,
         password,
       });
@@ -21,15 +21,15 @@ function Login() {
         return;
       }
 
-      let role = Array.isArray(res.data.roles)
-        ? res.data.roles[0]
-        : res.data.role;
+      const roles = res.data.roles || [];
+      const role = roles.length > 0 ? roles[0] : "ROLE_USER";
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", role);
       localStorage.setItem("username", res.data.username);
 
       window.dispatchEvent(new Event("authChange"));
+
       alert("✅ Đăng nhập thành công!");
       navigate("/");
     } catch (err) {
@@ -39,8 +39,7 @@ function Login() {
   };
 
   return (
-    <div
-      className="d-flex align-items-center justify-content-center vh-100"
+    <div className="d-flex align-items-center justify-content-center vh-100"
       style={{ background: "linear-gradient(135deg, #e0f7fa, #f1f8e9)" }}
     >
       <div className="card shadow-lg p-4" style={{ width: "400px" }}>

@@ -9,13 +9,13 @@ export default function AdminMenu() {
   useEffect(() => { load(); }, []);
 
   const load = async () => {
-    const res = await client.get("/menu");
+    const res = await client.get("/api/menu");
     setItems(res.data);
   };
 
   const create = async () => {
     if (!name || !price) return alert("Vui lòng nhập đầy đủ thông tin!");
-    await client.post("/menu", { name, price });
+    await client.post("/api/menu", { name, price });
     setName("");
     setPrice("");
     load();

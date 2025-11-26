@@ -6,13 +6,24 @@ export default function OrderPage() {
   const [menu, setMenu] = useState([]);
   const [selectedTable, setSelectedTable] = useState("");
   const [cart, setCart] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    client.get("/tables/available").then(r => setAvailableTables(r.data));
-    client.get("/menu").then(r => setMenu(r.data));
+    Promise.all([
+      client.get("/api/tables/available"),
+      client.get("/api/menu")
+    ])
+      .then(([t, m]) => {
+        setAvailableTables(t.data);
+        setMenu(m.data);
+      })
+      .catch(() => alert("Lỗi tải dữ liệu!"))
+      .finally(() => setLoading(false));
   }, []);
 
-  const addToCart = (id) => setCart({ ...cart, [id]: (cart[id] || 0) + 1 });
+  const addToCart = (id) =>
+    setCart({ ...cart, [id]: (cart[id] || 0) + 1 });
+
   const removeFromCart = (id) => {
     const updated = { ...cart };
     if (updated[id] > 1) updated[id]--;
@@ -32,23 +43,31 @@ export default function OrderPage() {
     }));
 
     try {
-      await client.post("/orders", { tableId: selectedTable, items });
+      await client.post("/api/orders", {
+        tableId: selectedTable,
+        items
+      });
+
       alert("✅ Đặt hàng thành công!");
       setCart({});
       setSelectedTable("");
-      const r = await client.get("/tables/available");
+
+      // reload lại danh sách bàn trống
+      const r = await client.get("/api/tables/available");
       setAvailableTables(r.data);
+
     } catch (err) {
       console.error(err);
       alert("❌ Lỗi khi đặt hàng!");
     }
   };
 
+  if (loading) return <h3 className="text-center mt-5">⏳ Đang tải...</h3>;
+
   return (
     <div className="container mt-4">
       <h2 className="text-center text-primary mb-4">☕ Đặt bàn & chọn món</h2>
 
-      {/* 🪑 Chọn bàn */}
       <div className="card shadow-sm p-4 mb-4">
         <h5>Chọn bàn</h5>
         {availableTables.length === 0 ? (
@@ -67,7 +86,6 @@ export default function OrderPage() {
         )}
       </div>
 
-      {/* 📋 Menu */}
       <div className="card shadow-sm p-4 mb-4">
         <h5>Menu</h5>
         <div className="row mt-3">
@@ -93,7 +111,6 @@ export default function OrderPage() {
         </div>
       </div>
 
-      {/* 🧾 Giỏ hàng */}
       <div className="card shadow-sm p-4 mb-4">
         <h5>Giỏ hàng</h5>
         {Object.keys(cart).length === 0 ? (

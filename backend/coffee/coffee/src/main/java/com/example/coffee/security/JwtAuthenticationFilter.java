@@ -23,41 +23,44 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getServletPath();
 
-        //  Bỏ qua xác thực cho các API công khai
-        if (path.startsWith("/api/auth") ||
+        // ✅ Cho phép các API public đi thẳng (không kiểm tra token)
+        if (path.startsWith("/auth") ||
+                path.startsWith("/api/auth") ||
                 path.startsWith("/api/menu") ||
                 path.startsWith("/api/tables") ||
-                path.startsWith("/api/orders")) {
-
+                path.startsWith("/api/orders"))
+        {
             filterChain.doFilter(request, response);
             return;
         }
 
-        //  Lấy header Authorization
+        // ✅ Lấy Authorization header
         String authHeader = request.getHeader("Authorization");
+
+        // ✅ Nếu không có token thì cho request đi tiếp (Spring Security sẽ xử lý tiếp)
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Missing or invalid Authorization header");
+            filterChain.doFilter(request, response);
             return;
         }
 
         String token = authHeader.substring(7);
 
         try {
-            //  Lấy username từ token
+            // ✅ Lấy username từ token
             String username = jwtService.extractUsername(token);
 
-            //  Kiểm tra token hợp lệ
-            if (!jwtService.validateToken(token, username)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
+            // ✅ Nếu token hợp lệ thì tiếp tục request
+            if (jwtService.validateToken(token, username)) {
+                filterChain.doFilter(request, response);
                 return;
             }
 
-            //  Nếu hợp lệ thì cho phép request đi tiếp
-            filterChain.doFilter(request, response);
+            // ❌ Token không hợp lệ
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired JWT token");
 
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token: " + e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
         }
     }
 }

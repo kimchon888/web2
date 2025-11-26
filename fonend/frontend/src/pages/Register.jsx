@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import client from "../api/axiosClient";  // ← dùng axiosClient
+import client from "../api/axiosClient";
 import { useNavigate } from "react-router-dom";
 
 function Register() {
@@ -12,7 +12,7 @@ function Register() {
     e.preventDefault();
 
     try {
-      await client.post("/auth/register", {
+      await client.post("/api/auth/register", {
         username,
         email,
         password,
@@ -27,11 +27,8 @@ function Register() {
   };
 
   return (
-    <div
-      className="d-flex align-items-center justify-content-center vh-100"
-      style={{
-        background: "linear-gradient(135deg, #f8bbd0, #f3e5f5)",
-      }}
+    <div className="d-flex align-items-center justify-content-center vh-100"
+      style={{ background: "linear-gradient(135deg, #f8bbd0, #f3e5f5)" }}
     >
       <div className="card shadow-lg p-4" style={{ width: "400px" }}>
         <h3 className="text-center mb-4 text-success">☕ Coffee Register</h3>

@@ -26,19 +26,16 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // Password encoder
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // Authentication manager
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
-    // Main security configuration
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -47,6 +44,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/auth/login",
+                                "/auth/register",
+                                "/auth/**",
                                 "/api/auth/**",
                                 "/api/menu/**",
                                 "/api/tables/**",
@@ -62,17 +62,15 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // CORS configuration
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Must use patterns because allowCredentials = true
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "https://web2-1-8zko.onrender.com", // frontend Render
-                "https://web2-c48d.onrender.com"    // backend Render
+                "https://web2-1-8zko.onrender.com",
+                "https://web2-c48d.onrender.com"
         ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -83,7 +81,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
 
-        System.out.println("✅ CORS loaded successfully");
         return source;
     }
 }

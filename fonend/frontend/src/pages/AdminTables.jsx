@@ -6,21 +6,35 @@ export default function AdminTables() {
   const [num, setNum] = useState("");
 
   useEffect(() => { load(); }, []);
+
   const load = async () => {
-    const res = await client.get("/tables");
-    setTables(res.data);
+    try {
+      const res = await client.get("/api/tables");
+      setTables(res.data);
+    } catch (e) {
+      console.error("Lỗi tải danh sách bàn:", e);
+      alert("Không thể tải danh sách bàn!");
+    }
   };
 
   const create = async () => {
     if (!num) return alert("Nhập số bàn!");
-    await client.post("/tables", { tableNumber: num, status: "EMPTY" });
-    setNum("");
-    load();
+    try {
+      await client.post("/api/tables", { tableNumber: num, status: "EMPTY" });
+      setNum("");
+      load();
+    } catch (e) {
+      alert("Không thể tạo bàn mới!");
+    }
   };
 
   const updateStatus = async (id, status) => {
-    await client.put(`/tables/${id}/status?status=${status}`);
-    load();
+    try {
+      await client.put(`/api/tables/${id}/status?status=${status}`);
+      load();
+    } catch (e) {
+      alert("Không thể cập nhật trạng thái!");
+    }
   };
 
   return (
